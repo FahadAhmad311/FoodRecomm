@@ -1,29 +1,29 @@
 import os
 import pandas as pd
+import streamlit as st
 from transformers import pipeline
-import gradio as gr
 
 # Specify the file path
 dataset_path = "/content/drive/My Drive/FINALFOODDATASET/FOOD-DATA-GROUP1.csv"
 
 # Check if the file exists
 if os.path.exists(dataset_path):
-    print("File exists. Proceeding to load the dataset.")
+    st.write("File exists. Proceeding to load the dataset.")
     try:
         # Load the dataset
         df = pd.read_csv(dataset_path)
 
         # Display basic information about the dataset
-        print("\nDataset Information:")
-        print(df.info())  # Column names, data types, and non-null counts
+        st.write("### Dataset Information:")
+        st.write(df.info())  # Column names, data types, and non-null counts
 
         # Display the first few rows of the dataset
-        print("\nDataset Preview (First 5 Rows):")
-        print(df.head())
+        st.write("### Dataset Preview (First 5 Rows):")
+        st.write(df.head())
 
         # Display summary statistics for numeric columns
-        print("\nDataset Summary (Numeric Columns):")
-        print(df.describe())
+        st.write("### Dataset Summary (Numeric Columns):")
+        st.write(df.describe())
 
         # Step 1: Initialize the Hugging Face pipeline
         qa_pipeline = pipeline("question-answering", model="distilbert/distilbert-base-cased-distilled-squad")
@@ -46,22 +46,22 @@ if os.path.exists(dataset_path):
             result = qa_pipeline(question=question, context=context)
             return result['answer']
 
-        # Step 4: Create Gradio interface
-        def gradio_interface(question):
-            return answer_question(question)
+        # Step 4: Streamlit interface
+        st.title("Meal Recommendation Chatbot")
+        st.write("Ask the chatbot questions about meals, and it will recommend suitable options based on the dataset.")
+        
+        # Input: User's question
+        question = st.text_input("Ask a question about meals:", "e.g., I have diabetes. Recommend a meal.")
+        
+        # Submit button
+        submit_button = st.button(label="Submit")
 
-        interface = gr.Interface(
-            fn=gradio_interface,
-            inputs=gr.Textbox(label="Ask a question about meals:", placeholder="e.g., I have diabetes. Recommend a meal."),
-            outputs=gr.Textbox(label="Answer:"),
-            title="Meal Recommendation Chatbot",
-            description="Ask the chatbot questions about meals, and it will recommend suitable options based on the dataset.",
-        )
-
-        # Launch the Gradio interface
-        interface.launch()
+        if submit_button and question:
+            # Get the answer to the question
+            answer = answer_question(question)
+            st.write(f"### Answer: {answer}")
 
     except Exception as e:
-        print(f"Error processing the dataset: {e}")
+        st.write(f"Error processing the dataset: {e}")
 else:
-    print(f"File not found at: {dataset_path}")
+    st.write(f"File not found at: {dataset_path}")
